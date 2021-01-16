@@ -3,11 +3,11 @@ import os
 from PIL import Image, ImageOps
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
-from scipy.sparse import coo_matrix, bmat, kron, eye
+from scipy.sparse import coo_matrix, lil_matrix, bmat, kron, eye, csr_matrix, diags
 from scipy.sparse.linalg import cg
 from scipy.linalg import toeplitz
 
-## Section b
+## Load image and apply noise
 
 img_path = os.path.join(os.path.dirname(__file__), 'imgs/centrosaurus.png')
 
@@ -58,7 +58,44 @@ KK.setdiag(np.ones(ny-1), k=-1)
 L = kron(KK, K) + kron(MM, M)
 L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
 
-# Solver equation
+## Solver equation
+
+# gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
+# fig = plt.figure()
+# N = len(gamma_list)
+# rows = 2
+# cols = int(np.ceil(N / rows))
+# gs = gridspec.GridSpec(rows, cols)
+
+# for idx, gamma in enumerate(gamma_list):
+#     A = eye(L.shape[0]) + gamma*L
+#     b = y
+#     x, convergence_inf = cg(A, b, tol=1e-4)
+#     x = np.clip(x, 0, 1)
+#     x = (x-min(x))/(max(x)-min(x))
+#     X = x.reshape((ny, nx)).T
+#     ax = fig.add_subplot(gs[idx])
+#     ax.imshow(X, cmap='gray')
+#     ax.set_title('Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
+# fig.suptitle('Reconstruction of noised image using low pass kernel ' +r"$h_8$")
+# plt.show()
+
+## Bilateral filtering
+
+n= nx*ny
+WG = -8*L
+WG.setdiag(np.zeros(n))
+WG = WG.tolil()
+sigma = 0.01
+rows,cols = WG.nonzero()
+D = np.exp(-(1 / 2*sigma**2)* (y[rows]-y[cols])**2)
+WG[rows, cols] = D
+
+DG = lil_matrix((n,n))
+DG.setdiag(WG.sum(axis=1))
+LG = DG - WG
+
+## Solve and plot reconstructed
 
 gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
 fig = plt.figure()
@@ -68,14 +105,21 @@ cols = int(np.ceil(N / rows))
 gs = gridspec.GridSpec(rows, cols)
 
 for idx, gamma in enumerate(gamma_list):
-    A = eye(L.shape[0]) + gamma*L
+    A = eye(LG.shape[0]) + gamma*LG
     b = y
     x, convergence_inf = cg(A, b, tol=1e-4)
     x = np.clip(x, 0, 1)
+    x = (x-min(x))/(max(x)-min(x))
     X = x.reshape((ny, nx)).T
     ax = fig.add_subplot(gs[idx])
     ax.imshow(X, cmap='gray')
-    ax.set_title('Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
+    ax.set_title('graph Laplacian Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
 
+fig.suptitle('Reconstruction of noised image using Graph Laplacian ' +r"$L_G, \sigma=$" +str(sigma) )
 plt.show()
+
+
+## 3D Point Clouds Denoising
+
+
 print('tre')
