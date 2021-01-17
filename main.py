@@ -9,7 +9,7 @@ from scipy.linalg import toeplitz
 
 ## Load image and apply noise
 
-img_path = os.path.join(os.path.dirname(__file__), 'imgs/centrosaurus.png')
+img_path = os.path.join(os.path.dirname(__file__), 'resources/centrosaurus.png')
 
 im = Image.open(img_path).convert('LA')
 im_gray = ImageOps.grayscale(im) # Convert to grayscale
@@ -37,26 +37,26 @@ plt.title('Noised Image')
 
 ## Build tooploitz matrix and L
 
-M = coo_matrix((nx, nx))
-M.setdiag(np.ones(nx-1))
-M.setdiag(-np.ones(nx-1)/8, k=1)
-M.setdiag(-np.ones(nx-1)/8, k=-1)
+# M = coo_matrix((nx, nx))
+# M.setdiag(np.ones(nx-1))
+# M.setdiag(-np.ones(nx-1)/8, k=1)
+# M.setdiag(-np.ones(nx-1)/8, k=-1)
 
-K = coo_matrix((nx, nx))
-K.setdiag(-np.ones(nx-1)/8)
-K.setdiag(-np.ones(nx-1)/8, k=1)
-K.setdiag(-np.ones(nx-1)/8, k=-1)
+# K = coo_matrix((nx, nx))
+# K.setdiag(-np.ones(nx-1)/8)
+# K.setdiag(-np.ones(nx-1)/8, k=1)
+# K.setdiag(-np.ones(nx-1)/8, k=-1)
 
-M = toeplitz(M).item()
+# M = toeplitz(M).item()
 
-MM = coo_matrix(np.eye(ny))
+# MM = coo_matrix(np.eye(ny))
 
-KK = coo_matrix((ny, ny))
-KK.setdiag(np.ones(ny-1), k=1)
-KK.setdiag(np.ones(ny-1), k=-1)
+# KK = coo_matrix((ny, ny))
+# KK.setdiag(np.ones(ny-1), k=1)
+# KK.setdiag(np.ones(ny-1), k=-1)
 
-L = kron(KK, K) + kron(MM, M)
-L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
+# L = kron(KK, K) + kron(MM, M)
+# L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
 
 ## Solver equation
 
@@ -82,44 +82,40 @@ L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
 
 ## Bilateral filtering
 
-n= nx*ny
-WG = -8*L
-WG.setdiag(np.zeros(n))
-WG = WG.tolil()
-sigma = 0.01
-rows,cols = WG.nonzero()
-D = np.exp(-(1 / 2*sigma**2)* (y[rows]-y[cols])**2)
-WG[rows, cols] = D
+# n= nx*ny
+# WG = -8*L
+# WG.setdiag(np.zeros(n))
+# WG = WG.tolil()
+# sigma = 0.05
+# rows,cols = WG.nonzero()
+# D = np.exp(-(1 / 2*sigma**2)* (y[rows]-y[cols])**2)
+# WG[rows, cols] = D
 
-DG = lil_matrix((n,n))
-DG.setdiag(WG.sum(axis=1))
-LG = DG - WG
+# DG = lil_matrix((n,n))
+# DG.setdiag(WG.sum(axis=1))
+# LG = DG - WG
 
 ## Solve and plot reconstructed
 
-gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
-fig = plt.figure()
-N = len(gamma_list)
-rows = 2
-cols = int(np.ceil(N / rows))
-gs = gridspec.GridSpec(rows, cols)
+# gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
+# fig = plt.figure()
+# N = len(gamma_list)
+# rows = 2
+# cols = int(np.ceil(N / rows))
+# gs = gridspec.GridSpec(rows, cols)
 
-for idx, gamma in enumerate(gamma_list):
-    A = eye(LG.shape[0]) + gamma*LG
-    b = y
-    x, convergence_inf = cg(A, b, tol=1e-4)
-    x = np.clip(x, 0, 1)
-    x = (x-min(x))/(max(x)-min(x))
-    X = x.reshape((ny, nx)).T
-    ax = fig.add_subplot(gs[idx])
-    ax.imshow(X, cmap='gray')
-    ax.set_title('graph Laplacian Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
+# for idx, gamma in enumerate(gamma_list):
+#     A = eye(LG.shape[0]) + gamma*LG
+#     b = y
+#     x, convergence_inf = cg(A, b, tol=1e-4)
+#     x = np.clip(x, 0, 1)
+#     x = (x-min(x))/(max(x)-min(x))
+#     X = x.reshape((ny, nx)).T
+#     ax = fig.add_subplot(gs[idx])
+#     ax.imshow(X, cmap='gray')
+#     ax.set_title('graph Laplacian Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
 
-fig.suptitle('Reconstruction of noised image using Graph Laplacian ' +r"$L_G, \sigma=$" +str(sigma) )
-plt.show()
-
-
-## 3D Point Clouds Denoising
-
+# fig.suptitle('Reconstruction of noised image using Graph Laplacian ' +r"$L_G, \sigma=$" +str(sigma) )
+# plt.show()
 
 print('tre')
