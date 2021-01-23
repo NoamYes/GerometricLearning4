@@ -37,48 +37,48 @@ plt.title('Noised Image')
 
 ## Build tooploitz matrix and L
 
-# M = coo_matrix((nx, nx))
-# M.setdiag(np.ones(nx-1))
-# M.setdiag(-np.ones(nx-1)/8, k=1)
-# M.setdiag(-np.ones(nx-1)/8, k=-1)
+M = coo_matrix((nx, nx))
+M.setdiag(np.ones(nx-1))
+M.setdiag(-np.ones(nx-1)/8, k=1)
+M.setdiag(-np.ones(nx-1)/8, k=-1)
 
-# K = coo_matrix((nx, nx))
-# K.setdiag(-np.ones(nx-1)/8)
-# K.setdiag(-np.ones(nx-1)/8, k=1)
-# K.setdiag(-np.ones(nx-1)/8, k=-1)
+K = coo_matrix((nx, nx))
+K.setdiag(-np.ones(nx-1)/8)
+K.setdiag(-np.ones(nx-1)/8, k=1)
+K.setdiag(-np.ones(nx-1)/8, k=-1)
 
-# M = toeplitz(M).item()
+M = toeplitz(M).item()
 
-# MM = coo_matrix(np.eye(ny))
+MM = coo_matrix(np.eye(ny))
 
-# KK = coo_matrix((ny, ny))
-# KK.setdiag(np.ones(ny-1), k=1)
-# KK.setdiag(np.ones(ny-1), k=-1)
+KK = coo_matrix((ny, ny))
+KK.setdiag(np.ones(ny-1), k=1)
+KK.setdiag(np.ones(ny-1), k=-1)
 
-# L = kron(KK, K) + kron(MM, M)
-# L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
+L = kron(KK, K) + kron(MM, M)
+L.setdiag(L.diagonal()[:,np.newaxis]-L.sum(axis=1).A)
 
 ## Solver equation
 
-# gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
-# fig = plt.figure()
-# N = len(gamma_list)
-# rows = 2
-# cols = int(np.ceil(N / rows))
-# gs = gridspec.GridSpec(rows, cols)
+gamma_list = [0.5, 1, 1.5, 2.5, 5, 7,  10]
+fig = plt.figure()
+N = len(gamma_list)
+rows = 2
+cols = int(np.ceil(N / rows))
+gs = gridspec.GridSpec(rows, cols)
 
-# for idx, gamma in enumerate(gamma_list):
-#     A = eye(L.shape[0]) + gamma*L
-#     b = y
-#     x, convergence_inf = cg(A, b, tol=1e-4)
-#     x = np.clip(x, 0, 1)
-#     x = (x-min(x))/(max(x)-min(x))
-#     X = x.reshape((ny, nx)).T
-#     ax = fig.add_subplot(gs[idx])
-#     ax.imshow(X, cmap='gray')
-#     ax.set_title('Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
-# fig.suptitle('Reconstruction of noised image using low pass kernel ' +r"$h_8$")
-# plt.show()
+for idx, gamma in enumerate(gamma_list):
+    A = eye(L.shape[0]) + gamma*L
+    b = y
+    x, convergence_inf = cg(A, b, tol=1e-4)
+    x = np.clip(x, 0, 1)
+    x = (x-min(x))/(max(x)-min(x))
+    X = x.reshape((ny, nx)).T
+    ax = fig.add_subplot(gs[idx])
+    ax.imshow(X, cmap='gray')
+    ax.set_title('Reconstructed image for ' +r"$\gamma=}$" + str(gamma))
+fig.suptitle('Reconstruction of noised image using low pass kernel ' +r"$h_8$")
+plt.show()
 
 ## Bilateral filtering
 
